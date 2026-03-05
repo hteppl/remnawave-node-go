@@ -14,7 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 
-	"github.com/remnawave/node-go/internal/logger"
+	"github.com/hteppl/remnawave-node-go/internal/logger"
 )
 
 func generateTestKeyPair(t *testing.T) (*rsa.PrivateKey, string) {

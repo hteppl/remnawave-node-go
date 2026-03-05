@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/remnawave/node-go/internal/api"
+	"github.com/hteppl/remnawave-node-go/internal/api"
 )
 
 func TestNewSuccessResponse(t *testing.T) {

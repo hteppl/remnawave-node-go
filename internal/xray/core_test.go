@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/remnawave/node-go/internal/logger"
+	"github.com/hteppl/remnawave-node-go/internal/logger"
 )
 
 func makeMinimalConfig() []byte {

@@ -16,10 +16,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/remnawave/node-go/internal/api"
-	"github.com/remnawave/node-go/internal/config"
-	"github.com/remnawave/node-go/internal/logger"
-	"github.com/remnawave/node-go/internal/xray"
+	"github.com/hteppl/remnawave-node-go/internal/api"
+	"github.com/hteppl/remnawave-node-go/internal/config"
+	"github.com/hteppl/remnawave-node-go/internal/logger"
+	"github.com/hteppl/remnawave-node-go/internal/xray"
 )
 
 func generateTestCerts() (*config.NodePayload, error) {

@@ -14,12 +14,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/klauspost/compress/zstd"
 
-	"github.com/remnawave/node-go/internal/api/controller"
-	"github.com/remnawave/node-go/internal/api/middleware"
-	"github.com/remnawave/node-go/internal/config"
-	apperrors "github.com/remnawave/node-go/internal/errors"
-	"github.com/remnawave/node-go/internal/logger"
-	"github.com/remnawave/node-go/internal/xray"
+	"github.com/hteppl/remnawave-node-go/internal/api/controller"
+	"github.com/hteppl/remnawave-node-go/internal/api/middleware"
+	"github.com/hteppl/remnawave-node-go/internal/config"
+	apperrors "github.com/hteppl/remnawave-node-go/internal/errors"
+	"github.com/hteppl/remnawave-node-go/internal/logger"
+	"github.com/hteppl/remnawave-node-go/internal/xray"
 )
 
 type Server struct {

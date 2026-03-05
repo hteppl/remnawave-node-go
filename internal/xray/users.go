@@ -9,7 +9,7 @@ import (
 	"github.com/xtls/xray-core/features/inbound"
 	"github.com/xtls/xray-core/proxy"
 
-	"github.com/remnawave/node-go/internal/logger"
+	"github.com/hteppl/remnawave-node-go/internal/logger"
 )
 
 type UserManager struct {

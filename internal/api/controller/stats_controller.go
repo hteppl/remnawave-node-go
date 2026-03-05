@@ -10,8 +10,8 @@ import (
 	appstats "github.com/xtls/xray-core/app/stats"
 	"github.com/xtls/xray-core/features/stats"
 
-	"github.com/remnawave/node-go/internal/logger"
-	"github.com/remnawave/node-go/internal/xray"
+	"github.com/hteppl/remnawave-node-go/internal/logger"
+	"github.com/hteppl/remnawave-node-go/internal/xray"
 )
 
 type ResetRequest struct {

@@ -15,7 +15,7 @@ import (
 	"github.com/xtls/xray-core/features/routing"
 	_ "github.com/xtls/xray-core/main/distro/all"
 
-	"github.com/remnawave/node-go/internal/logger"
+	"github.com/hteppl/remnawave-node-go/internal/logger"
 )
 
 func init() {

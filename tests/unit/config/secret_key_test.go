@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/remnawave/node-go/internal/config"
+	"github.com/hteppl/remnawave-node-go/internal/config"
 )
 
 func makeValidSecretKey() string {

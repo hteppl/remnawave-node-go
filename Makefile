@@ -1,7 +1,7 @@
 # Variables
 BINARY_NAME=remnawave-node-go
 VERSION=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
-LDFLAGS=-ldflags "-X github.com/remnawave/node-go/internal/version.Version=$(VERSION)"
+LDFLAGS=-ldflags "-X github.com/hteppl/remnawave-node-go/internal/version.Version=$(VERSION)"
 
 .PHONY: all build test clean install run lint
 

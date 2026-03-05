@@ -9,8 +9,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/remnawave/node-go/internal/logger"
-	"github.com/remnawave/node-go/internal/xray"
+	"github.com/hteppl/remnawave-node-go/internal/logger"
+	"github.com/hteppl/remnawave-node-go/internal/xray"
 )
 
 type BlockIPRequest struct {

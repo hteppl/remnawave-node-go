@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	apperrors "github.com/remnawave/node-go/internal/errors"
+	apperrors "github.com/hteppl/remnawave-node-go/internal/errors"
 )
 
 func TestErrors_AllCodesPresent(t *testing.T) {

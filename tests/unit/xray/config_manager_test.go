@@ -3,7 +3,7 @@ package xray_test
 import (
 	"testing"
 
-	"github.com/remnawave/node-go/internal/xray"
+	"github.com/hteppl/remnawave-node-go/internal/xray"
 )
 
 func TestConfigManager_IsNeedRestartCore_FirstStart(t *testing.T) {

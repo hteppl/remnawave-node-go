@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/remnawave/node-go/internal/logger"
+	"github.com/hteppl/remnawave-node-go/internal/logger"
 )
 
 type InboundHash struct {

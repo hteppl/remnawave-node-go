@@ -5,7 +5,7 @@ import (
 
 	"github.com/xtls/xray-core/common/protocol"
 
-	"github.com/remnawave/node-go/internal/xray"
+	"github.com/hteppl/remnawave-node-go/internal/xray"
 )
 
 func TestBuildVlessUser(t *testing.T) {

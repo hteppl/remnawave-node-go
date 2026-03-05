@@ -1,4 +1,4 @@
-module github.com/remnawave/node-go
+module github.com/hteppl/remnawave-node-go
 
 go 1.26.0
 
