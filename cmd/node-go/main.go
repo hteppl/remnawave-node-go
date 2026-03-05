@@ -39,7 +39,7 @@ func main() {
 		Format: logger.FormatJSON,
 	})
 
-	log.Info(fmt.Sprintf("Starting remnawave-node-go version %s", version.Version))
+	log.Info(fmt.Sprintf("Starting remnawave-node-go version %s (%s)", version.Version, version.BuildTime))
 
 	core := xray.NewCore(log)
 	configMgr := xray.NewConfigManager(log)

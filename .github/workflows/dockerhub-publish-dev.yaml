@@ -32,7 +32,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: hteppl/remnawave-node-go:dev
           build-args: |
-            VERSION=dev-${{ github.sha }}
+            VERSION=0.0.0-dev+${{ github.sha }}
             BUILD_TIME=${{ github.event.head_commit.timestamp }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

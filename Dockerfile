@@ -10,7 +10,7 @@ RUN go mod download
 
 COPY . .
 
-ARG VERSION=dev
+ARG VERSION=0.0.0-dev
 ARG BUILD_TIME=unknown
 ARG XRAY_VERSION=v26.2.6
 
