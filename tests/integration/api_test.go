@@ -128,16 +128,16 @@ func TestXrayHealthcheck(t *testing.T) {
 
 	var response struct {
 		Response struct {
-			IsHealthy     bool    `json:"isHealthy"`
-			IsXrayRunning bool    `json:"isXrayRunning"`
-			XrayVersion   *string `json:"xrayVersion"`
-			NodeVersion   string  `json:"nodeVersion"`
+			IsAlive                  bool    `json:"isAlive"`
+			XrayInternalStatusCached bool    `json:"xrayInternalStatusCached"`
+			XrayVersion              *string `json:"xrayVersion"`
+			NodeVersion              string  `json:"nodeVersion"`
 		} `json:"response"`
 	}
 	err = json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
-	assert.True(t, response.Response.IsHealthy)
-	assert.False(t, response.Response.IsXrayRunning)
+	assert.True(t, response.Response.IsAlive)
+	assert.False(t, response.Response.XrayInternalStatusCached)
 	assert.NotEmpty(t, response.Response.NodeVersion)
 }
 
@@ -470,7 +470,7 @@ func TestXrayStartValidationError(t *testing.T) {
 
 	w := makeAuthorizedRequest(t, server, creds, "POST", "/node/xray/start", invalidReq)
 
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 
 	var response struct {
 		Response struct {

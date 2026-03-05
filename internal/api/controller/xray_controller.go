@@ -22,8 +22,31 @@ func wrapResponse(data interface{}) successResponse {
 	return successResponse{Response: data}
 }
 
+func strPtr(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
 const (
 	APIPort = 61012
+)
+
+var (
+	msgRequestAlreadyInProgress  = "Request already in progress"
+	msgUnsupportedVersion        = "Unsupported Remnawave version. Please, upgrade Remnawave to version v2.3.x or higher"
+	logStartAlreadyInProgress    = "Start request already in progress, rejecting duplicate"
+	logFailedToParseStartRequest = "Failed to parse start request"
+	logRestartRequired           = "Restart required - proceeding with xray core restart"
+	logForceRestartRequested     = "Force restart requested"
+	logFailedToExtractUsers      = "Failed to extract users from config"
+	logFailedToMarshalConfig     = "Failed to marshal xray config"
+	logFailedToStartXray         = "Failed to start xray core"
+	logXrayStartedSuccessfully   = "Xray core started successfully"
+	logStopRequested             = "Remnawave requested to stop Xray."
+	logFailedToStopXray          = "Failed to stop xray core"
+	logXrayStoppedSuccessfully   = "Xray core stopped successfully"
 )
 
 type StartRequest struct {
@@ -59,10 +82,10 @@ type StatusResponse struct {
 }
 
 type HealthcheckResponse struct {
-	IsHealthy     bool    `json:"isHealthy"`
-	IsXrayRunning bool    `json:"isXrayRunning"`
-	XrayVersion   *string `json:"xrayVersion"`
-	NodeVersion   string  `json:"nodeVersion"`
+	IsAlive                  bool    `json:"isAlive"`
+	XrayInternalStatusCached bool    `json:"xrayInternalStatusCached"`
+	XrayVersion              *string `json:"xrayVersion"`
+	NodeVersion              string  `json:"nodeVersion"`
 }
 
 type XrayController struct {
@@ -89,13 +112,16 @@ func (c *XrayController) RegisterRoutes(group *gin.RouterGroup) {
 }
 
 func (c *XrayController) handleStart(ctx *gin.Context) {
+	xrayVer := c.core.GetVersion()
+	nodeInfo := NodeInformation{Version: version.Version}
+
 	if !c.isProcessing.CompareAndSwap(false, true) {
-		c.logger.Warn("Start request already in progress, rejecting duplicate")
-		errMsg := "another start request is already in progress"
-		ctx.JSON(http.StatusConflict, wrapResponse(StartResponse{
+		c.logger.Warn(logStartAlreadyInProgress)
+		ctx.JSON(http.StatusOK, wrapResponse(StartResponse{
 			IsStarted:       false,
-			Error:           &errMsg,
-			NodeInformation: NodeInformation{Version: version.Version},
+			Version:         strPtr(xrayVer),
+			Error:           &msgRequestAlreadyInProgress,
+			NodeInformation: nodeInfo,
 		}))
 		return
 	}
@@ -106,12 +132,11 @@ func (c *XrayController) handleStart(ctx *gin.Context) {
 
 	var req StartRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		c.logger.WithError(err).Error("Failed to parse start request")
-		errMsg := "invalid request body: " + err.Error()
-		ctx.JSON(http.StatusBadRequest, wrapResponse(StartResponse{
+		c.logger.WithError(err).Error(logFailedToParseStartRequest)
+		ctx.JSON(http.StatusOK, wrapResponse(StartResponse{
 			IsStarted:       false,
-			Error:           &errMsg,
-			NodeInformation: NodeInformation{Version: version.Version},
+			Error:           &msgUnsupportedVersion,
+			NodeInformation: nodeInfo,
 		}))
 		return
 	}
@@ -122,75 +147,83 @@ func (c *XrayController) handleStart(ctx *gin.Context) {
 	if c.core.IsRunning() && !forceRestart {
 		needRestart := c.configManager.IsNeedRestartCore(hashes)
 		if !needRestart {
-			xrayVer := c.core.GetVersion()
+			xrayVer = c.core.GetVersion()
 			sysInfo := getSystemInfo()
 			ctx.JSON(http.StatusOK, wrapResponse(StartResponse{
 				IsStarted:       true,
 				Version:         &xrayVer,
 				SystemInfo:      &sysInfo,
-				NodeInformation: NodeInformation{Version: version.Version},
+				NodeInformation: nodeInfo,
 			}))
 			return
 		}
-		c.logger.Info("Restart required - proceeding with xray core restart")
+		c.logger.Info(logRestartRequired)
+	}
+
+	if forceRestart {
+		c.logger.Warn(logForceRestartRequested)
 	}
 
 	config := generateAPIConfig(req.XrayConfig)
 
 	if err := c.configManager.ExtractUsersFromConfig(hashes, config); err != nil {
-		c.logger.WithError(err).Error("Failed to extract users from config")
-		errMsg := "failed to extract users: " + err.Error()
-		ctx.JSON(http.StatusInternalServerError, wrapResponse(StartResponse{
+		c.logger.WithError(err).Error(logFailedToExtractUsers)
+		errMsg := err.Error()
+		ctx.JSON(http.StatusOK, wrapResponse(StartResponse{
 			IsStarted:       false,
 			Error:           &errMsg,
-			NodeInformation: NodeInformation{Version: version.Version},
+			NodeInformation: nodeInfo,
 		}))
 		return
 	}
 
 	configJSON, err := json.Marshal(config)
 	if err != nil {
-		c.logger.WithError(err).Error("Failed to marshal xray config")
-		errMsg := "failed to serialize config: " + err.Error()
-		ctx.JSON(http.StatusInternalServerError, wrapResponse(StartResponse{
+		c.logger.WithError(err).Error(logFailedToMarshalConfig)
+		errMsg := err.Error()
+		ctx.JSON(http.StatusOK, wrapResponse(StartResponse{
 			IsStarted:       false,
 			Error:           &errMsg,
-			NodeInformation: NodeInformation{Version: version.Version},
+			NodeInformation: nodeInfo,
 		}))
 		return
 	}
 
 	if err := c.core.Start(configJSON); err != nil {
-		c.logger.WithError(err).Error("Failed to start xray core")
-		errMsg := "failed to start xray: " + err.Error()
-		ctx.JSON(http.StatusInternalServerError, wrapResponse(StartResponse{
+		c.logger.WithError(err).Error(logFailedToStartXray)
+		errMsg := err.Error()
+		sysInfo := getSystemInfo()
+		ctx.JSON(http.StatusOK, wrapResponse(StartResponse{
 			IsStarted:       false,
 			Error:           &errMsg,
-			NodeInformation: NodeInformation{Version: version.Version},
+			SystemInfo:      &sysInfo,
+			NodeInformation: nodeInfo,
 		}))
 		return
 	}
 
-	xrayVer := c.core.GetVersion()
+	xrayVer = c.core.GetVersion()
 	sysInfo := getSystemInfo()
 
-	c.logger.WithField("version", xrayVer).Info("Xray core started successfully")
+	c.logger.WithField("version", xrayVer).Info(logXrayStartedSuccessfully)
 
 	ctx.JSON(http.StatusOK, wrapResponse(StartResponse{
 		IsStarted:       true,
 		Version:         &xrayVer,
 		SystemInfo:      &sysInfo,
-		NodeInformation: NodeInformation{Version: version.Version},
+		NodeInformation: nodeInfo,
 	}))
 }
 
 func (c *XrayController) handleStop(ctx *gin.Context) {
+	c.logger.Info(logStopRequested)
+
 	c.startMu.Lock()
 	defer c.startMu.Unlock()
 
 	if err := c.core.Stop(); err != nil {
-		c.logger.WithError(err).Error("Failed to stop xray core")
-		ctx.JSON(http.StatusInternalServerError, wrapResponse(StopResponse{
+		c.logger.WithError(err).Error(logFailedToStopXray)
+		ctx.JSON(http.StatusOK, wrapResponse(StopResponse{
 			IsStopped: false,
 		}))
 		return
@@ -198,7 +231,7 @@ func (c *XrayController) handleStop(ctx *gin.Context) {
 
 	c.configManager.Cleanup()
 
-	c.logger.Info("Xray core stopped and config manager cleaned up")
+	c.logger.Info(logXrayStoppedSuccessfully)
 
 	ctx.JSON(http.StatusOK, wrapResponse(StopResponse{
 		IsStopped: true,
@@ -228,10 +261,10 @@ func (c *XrayController) handleHealthcheck(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, wrapResponse(HealthcheckResponse{
-		IsHealthy:     true,
-		IsXrayRunning: isRunning,
-		XrayVersion:   xrayVersion,
-		NodeVersion:   version.Version,
+		IsAlive:                  true,
+		XrayInternalStatusCached: isRunning,
+		XrayVersion:              xrayVersion,
+		NodeVersion:              version.Version,
 	}))
 }
 
