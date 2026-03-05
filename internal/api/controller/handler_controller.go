@@ -111,6 +111,9 @@ func (c *HandlerController) handleAddUser(ctx *gin.Context) {
 		}
 	}
 
+	var firstErr error
+	successCount := 0
+
 	for _, inboundData := range req.Data {
 		userData := xray.UserData{
 			UserID:    inboundData.Username,
@@ -144,19 +147,25 @@ func (c *HandlerController) handleAddUser(ctx *gin.Context) {
 				WithField("tag", inboundData.Tag).
 				WithField("username", inboundData.Username).
 				Error(logFailedToAddUserToInbound)
-			errMsg := err.Error()
-			ctx.JSON(http.StatusOK, wrapResponse(AddUserResponseData{
-				Success: false,
-				Error:   &errMsg,
-			}))
-			return
+			if firstErr == nil {
+				firstErr = err
+			}
+			continue
+		}
+
+		successCount++
+		if req.HashData.VlessUUID != "" {
+			c.configManager.AddUserToInbound(inboundData.Tag, req.HashData.VlessUUID)
 		}
 	}
 
-	if req.HashData.VlessUUID != "" {
-		for _, inboundData := range req.Data {
-			c.configManager.AddUserToInbound(inboundData.Tag, req.HashData.VlessUUID)
-		}
+	if successCount == 0 && firstErr != nil {
+		errMsg := firstErr.Error()
+		ctx.JSON(http.StatusOK, wrapResponse(AddUserResponseData{
+			Success: false,
+			Error:   &errMsg,
+		}))
+		return
 	}
 
 	c.logger.WithField("username", username).
@@ -206,10 +215,7 @@ func (c *HandlerController) handleAddUsers(ctx *gin.Context) {
 		c.configManager.AddXtlsConfigInbound(tag)
 	}
 
-	allTags := req.AffectedInboundTags
-	if len(allTags) == 0 {
-		allTags = c.configManager.GetXtlsConfigInbounds()
-	}
+	allTags := c.configManager.GetXtlsConfigInbounds()
 
 	for _, userEntry := range req.Users {
 		username := userEntry.UserData.UserID
@@ -236,11 +242,16 @@ func (c *HandlerController) handleAddUsers(ctx *gin.Context) {
 			}
 
 			inbound := xray.InboundUserData{
-				Type:       inboundData.Type,
-				Tag:        inboundData.Tag,
-				Flow:       inboundData.Flow,
-				CipherType: xray.ParseCipherType(inboundData.CipherType),
-				IVCheck:    inboundData.IVCheck,
+				Type: inboundData.Type,
+				Tag:  inboundData.Tag,
+				Flow: inboundData.Flow,
+			}
+			if inboundData.Type == "shadowsocks" {
+				inbound.CipherType = xray.CipherTypeCHACHA20POLY1305
+				inbound.IVCheck = false
+			} else {
+				inbound.CipherType = xray.ParseCipherType(inboundData.CipherType)
+				inbound.IVCheck = inboundData.IVCheck
 			}
 
 			user := xray.BuildUserForInbound(inbound, userData)
@@ -256,12 +267,7 @@ func (c *HandlerController) handleAddUsers(ctx *gin.Context) {
 					WithField("tag", inboundData.Tag).
 					WithField("username", username).
 					Error(logFailedToAddUserToInboundDuringBulk)
-				errMsg := err.Error()
-				ctx.JSON(http.StatusOK, wrapResponse(AddUserResponseData{
-					Success: false,
-					Error:   &errMsg,
-				}))
-				return
+				continue
 			}
 
 			if userEntry.UserData.VlessUUID != "" {

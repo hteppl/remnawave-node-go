@@ -102,22 +102,15 @@ func TestGenerateAPIConfig_AddsAPIInbound(t *testing.T) {
 
 	require.NotNil(t, storedConfig)
 
-	// Check that API inbound was added
+	// Check that API inbound was added as the first inbound
 	inbounds, ok := storedConfig["inbounds"].([]interface{})
 	require.True(t, ok)
+	require.GreaterOrEqual(t, len(inbounds), 1)
 
-	hasAPIInbound := false
-	for _, ib := range inbounds {
-		ibMap, ok := ib.(map[string]interface{})
-		if ok {
-			if tag, ok := ibMap["tag"].(string); ok && tag == "REMNAWAVE_API_INBOUND" {
-				hasAPIInbound = true
-				assert.Equal(t, "dokodemo-door", ibMap["protocol"])
-				break
-			}
-		}
-	}
-	assert.True(t, hasAPIInbound, "should have REMNAWAVE_API_INBOUND inbound")
+	firstIb, ok := inbounds[0].(map[string]interface{})
+	require.True(t, ok)
+	assert.Equal(t, "REMNAWAVE_API_INBOUND", firstIb["tag"], "API inbound should be first")
+	assert.Equal(t, "dokodemo-door", firstIb["protocol"])
 }
 
 func TestGenerateAPIConfig_AddsAPIRoutingRule(t *testing.T) {

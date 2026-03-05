@@ -165,30 +165,22 @@ func (c *XrayController) handleStop(ctx *gin.Context) {
 
 func (c *XrayController) handleStatus(ctx *gin.Context) {
 	isRunning := c.core.IsRunning()
-	var version *string
-	if isRunning {
-		v := c.core.GetVersion()
-		version = &v
-	}
+	v := c.core.GetVersion()
 
 	ctx.JSON(http.StatusOK, wrapResponse(StatusResponse{
 		IsRunning: isRunning,
-		Version:   version,
+		Version:   &v,
 	}))
 }
 
 func (c *XrayController) handleHealthcheck(ctx *gin.Context) {
 	isRunning := c.core.IsRunning()
-	var xrayVersion *string
-	if isRunning {
-		v := c.core.GetVersion()
-		xrayVersion = &v
-	}
+	v := c.core.GetVersion()
 
 	ctx.JSON(http.StatusOK, wrapResponse(HealthcheckResponse{
 		IsAlive:                  true,
 		XrayInternalStatusCached: isRunning,
-		XrayVersion:              xrayVersion,
+		XrayVersion:              &v,
 		NodeVersion:              version.Version,
 	}))
 }

@@ -75,7 +75,7 @@ func (c *StatsController) handleGetUsersStats(ctx *gin.Context) {
 
 	users := make([]UserStats, 0, len(userTraffic))
 	for _, userStats := range userTraffic {
-		if userStats.Uplink > 0 || userStats.Downlink > 0 {
+		if userStats.Uplink != 0 || userStats.Downlink != 0 {
 			users = append(users, *userStats)
 		}
 	}

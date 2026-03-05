@@ -95,7 +95,7 @@ func TestStrPtr_NonEmpty(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 	assert.False(t, response.Response.IsRunning)
-	assert.Nil(t, response.Response.Version, "version should be nil when not running (strPtr returns nil for empty string)")
+	assert.NotNil(t, response.Response.Version, "version should always be returned")
 }
 
 func TestStrPtr_Empty(t *testing.T) {
@@ -123,5 +123,5 @@ func TestStrPtr_Empty(t *testing.T) {
 	}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
-	assert.Nil(t, response.Response.XrayVersion, "xrayVersion should be nil when xray not running")
+	assert.NotNil(t, response.Response.XrayVersion, "xrayVersion should always be returned")
 }

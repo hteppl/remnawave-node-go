@@ -113,7 +113,7 @@ func TestXrayStatus(t *testing.T) {
 	err = json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 	assert.False(t, response.Response.IsRunning)
-	assert.Nil(t, response.Response.Version)
+	assert.NotNil(t, response.Response.Version)
 }
 
 func TestXrayHealthcheck(t *testing.T) {

@@ -32,7 +32,7 @@ func generateAPIConfig(config map[string]interface{}) map[string]interface{} {
 	}
 
 	if !hasAPIInbound {
-		inbounds = append(inbounds, apiInbound)
+		inbounds = append([]interface{}{apiInbound}, inbounds...)
 		result["inbounds"] = inbounds
 	}
 
