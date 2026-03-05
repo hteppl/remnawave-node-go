@@ -76,17 +76,11 @@ services:
     image: hteppl/remnawave-node-go:latest
     container_name: remnawave-node-go
     restart: unless-stopped
+    network_mode: host
     env_file:
       - .env
     volumes:
       - xray-geodata:/usr/local/share/xray
-    networks:
-      - remnawave-node-go-network
-
-networks:
-  remnawave-node-go-network:
-    name: remnawave-node-go-network
-    driver: bridge
 
 volumes:
   xray-geodata:
