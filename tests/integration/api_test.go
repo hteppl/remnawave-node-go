@@ -138,7 +138,7 @@ func TestXrayHealthcheck(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, response.Response.IsHealthy)
 	assert.False(t, response.Response.IsXrayRunning)
-	assert.Equal(t, "1.0.0", response.Response.NodeVersion)
+	assert.NotEmpty(t, response.Response.NodeVersion)
 }
 
 func TestXrayStartWithMinimalConfig(t *testing.T) {
@@ -159,15 +159,13 @@ func TestXrayStartWithMinimalConfig(t *testing.T) {
 			Version    string `json:"version"`
 			Error      string `json:"error"`
 			SystemInfo struct {
-				OS           string `json:"os"`
-				Arch         string `json:"arch"`
-				NumCPU       int    `json:"numCpu"`
-				GoVersion    string `json:"goVersion"`
-				NumGoroutine int    `json:"numGoroutine"`
-			} `json:"systemInfo"`
-			NodeInfo struct {
+				CpuCores    int    `json:"cpuCores"`
+				CpuModel    string `json:"cpuModel"`
+				MemoryTotal string `json:"memoryTotal"`
+			} `json:"systemInformation"`
+			NodeInformation struct {
 				Version string `json:"version"`
-			} `json:"nodeInfo"`
+			} `json:"nodeInformation"`
 		} `json:"response"`
 	}
 	err = json.Unmarshal(w.Body.Bytes(), &response)
@@ -175,7 +173,7 @@ func TestXrayStartWithMinimalConfig(t *testing.T) {
 	assert.True(t, response.Response.IsStarted)
 	assert.NotEmpty(t, response.Response.Version)
 	assert.NotNil(t, response.Response.SystemInfo)
-	assert.Equal(t, "1.0.0", response.Response.NodeInfo.Version)
+	assert.NotEmpty(t, response.Response.NodeInformation.Version)
 }
 
 func TestXrayStop(t *testing.T) {
@@ -476,11 +474,11 @@ func TestXrayStartValidationError(t *testing.T) {
 
 	var response struct {
 		Response struct {
-			IsStarted bool    `json:"isStarted"`
-			Error     *string `json:"error"`
-			NodeInfo  struct {
+			IsStarted       bool    `json:"isStarted"`
+			Error           *string `json:"error"`
+			NodeInformation struct {
 				Version string `json:"version"`
-			} `json:"nodeInfo"`
+			} `json:"nodeInformation"`
 		} `json:"response"`
 	}
 	err = json.Unmarshal(w.Body.Bytes(), &response)

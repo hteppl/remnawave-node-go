@@ -87,7 +87,7 @@ func TestLoad_FromConfigFile(t *testing.T) {
 		"logLevel":         "warn",
 	}
 	data, _ := json.Marshal(configData)
-	os.WriteFile(configPath, data, 0644)
+	_ = os.WriteFile(configPath, data, 0644)
 
 	os.Setenv("SECRET_KEY", makeTestSecretKey())
 	os.Setenv("CONFIG_PATH", configPath)
@@ -116,7 +116,7 @@ func TestLoad_EnvOverridesConfigFile(t *testing.T) {
 		"logLevel": "warn",
 	}
 	data, _ := json.Marshal(configData)
-	os.WriteFile(configPath, data, 0644)
+	_ = os.WriteFile(configPath, data, 0644)
 
 	os.Setenv("SECRET_KEY", makeTestSecretKey())
 	os.Setenv("CONFIG_PATH", configPath)

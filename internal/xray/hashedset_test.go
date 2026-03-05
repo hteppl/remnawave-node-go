@@ -223,22 +223,22 @@ func TestHashedSet_HashFormat(t *testing.T) {
 
 func TestDjb2Dual(t *testing.T) {
 	// Test the internal hash function directly
-	high, low := djb2Dual("test")
+	high, low := Djb2Dual("test")
 
 	// Values should be deterministic
 	if high == 0 && low == 0 {
-		t.Error("djb2Dual should not return zeros for non-empty string")
+		t.Error("Djb2Dual should not return zeros for non-empty string")
 	}
 
 	// Same input should give same output
-	high2, low2 := djb2Dual("test")
+	high2, low2 := Djb2Dual("test")
 	if high != high2 || low != low2 {
-		t.Error("djb2Dual should be deterministic")
+		t.Error("Djb2Dual should be deterministic")
 	}
 
 	// Different inputs should (usually) give different outputs
-	high3, low3 := djb2Dual("different")
+	high3, low3 := Djb2Dual("different")
 	if high == high3 && low == low3 {
-		t.Error("djb2Dual should give different values for different inputs")
+		t.Error("Djb2Dual should give different values for different inputs")
 	}
 }

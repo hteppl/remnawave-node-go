@@ -1,15 +1,21 @@
 package controller
 
 import (
+	"bufio"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
+	"os/exec"
 	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/remnawave/node-go/internal/logger"
+	"github.com/remnawave/node-go/internal/version"
 	"github.com/remnawave/node-go/internal/xray"
 )
 
@@ -22,8 +28,7 @@ func wrapResponse(data interface{}) successResponse {
 }
 
 const (
-	NodeVersion = "1.0.0"
-	APIPort     = 61012
+	APIPort = 61012
 )
 
 type StartRequest struct {
@@ -31,24 +36,22 @@ type StartRequest struct {
 	Internals  xray.Internals         `json:"internals" binding:"required"`
 }
 
-type NodeInfo struct {
+type NodeInformation struct {
 	Version string `json:"version"`
 }
 
 type SystemInfo struct {
-	OS           string `json:"os"`
-	Arch         string `json:"arch"`
-	NumCPU       int    `json:"numCpu"`
-	GoVersion    string `json:"goVersion"`
-	NumGoroutine int    `json:"numGoroutine"`
+	CpuCores    int    `json:"cpuCores"`
+	CpuModel    string `json:"cpuModel"`
+	MemoryTotal string `json:"memoryTotal"`
 }
 
 type StartResponse struct {
-	IsStarted  bool        `json:"isStarted"`
-	Version    *string     `json:"version"`
-	Error      *string     `json:"error"`
-	SystemInfo *SystemInfo `json:"systemInfo"`
-	NodeInfo   NodeInfo    `json:"nodeInfo"`
+	IsStarted       bool            `json:"isStarted"`
+	Version         *string         `json:"version"`
+	Error           *string         `json:"error"`
+	SystemInfo      *SystemInfo     `json:"systemInformation"`
+	NodeInformation NodeInformation `json:"nodeInformation"`
 }
 
 type StopResponse struct {
@@ -95,9 +98,9 @@ func (c *XrayController) handleStart(ctx *gin.Context) {
 		c.logger.Warn("Start request already in progress, rejecting duplicate")
 		errMsg := "another start request is already in progress"
 		ctx.JSON(http.StatusConflict, wrapResponse(StartResponse{
-			IsStarted: false,
-			Error:     &errMsg,
-			NodeInfo:  NodeInfo{Version: NodeVersion},
+			IsStarted:       false,
+			Error:           &errMsg,
+			NodeInformation: NodeInformation{Version: version.Version},
 		}))
 		return
 	}
@@ -111,9 +114,9 @@ func (c *XrayController) handleStart(ctx *gin.Context) {
 		c.logger.WithError(err).Error("Failed to parse start request")
 		errMsg := "invalid request body: " + err.Error()
 		ctx.JSON(http.StatusBadRequest, wrapResponse(StartResponse{
-			IsStarted: false,
-			Error:     &errMsg,
-			NodeInfo:  NodeInfo{Version: NodeVersion},
+			IsStarted:       false,
+			Error:           &errMsg,
+			NodeInformation: NodeInformation{Version: version.Version},
 		}))
 		return
 	}
@@ -124,13 +127,13 @@ func (c *XrayController) handleStart(ctx *gin.Context) {
 	if c.core.IsRunning() && !forceRestart {
 		needRestart := c.configManager.IsNeedRestartCore(hashes)
 		if !needRestart {
-			version := c.core.GetVersion()
+			xrayVer := c.core.GetVersion()
 			sysInfo := getSystemInfo()
 			ctx.JSON(http.StatusOK, wrapResponse(StartResponse{
-				IsStarted:  true,
-				Version:    &version,
-				SystemInfo: &sysInfo,
-				NodeInfo:   NodeInfo{Version: NodeVersion},
+				IsStarted:       true,
+				Version:         &xrayVer,
+				SystemInfo:      &sysInfo,
+				NodeInformation: NodeInformation{Version: version.Version},
 			}))
 			return
 		}
@@ -143,9 +146,9 @@ func (c *XrayController) handleStart(ctx *gin.Context) {
 		c.logger.WithError(err).Error("Failed to extract users from config")
 		errMsg := "failed to extract users: " + err.Error()
 		ctx.JSON(http.StatusInternalServerError, wrapResponse(StartResponse{
-			IsStarted: false,
-			Error:     &errMsg,
-			NodeInfo:  NodeInfo{Version: NodeVersion},
+			IsStarted:       false,
+			Error:           &errMsg,
+			NodeInformation: NodeInformation{Version: version.Version},
 		}))
 		return
 	}
@@ -155,9 +158,9 @@ func (c *XrayController) handleStart(ctx *gin.Context) {
 		c.logger.WithError(err).Error("Failed to marshal xray config")
 		errMsg := "failed to serialize config: " + err.Error()
 		ctx.JSON(http.StatusInternalServerError, wrapResponse(StartResponse{
-			IsStarted: false,
-			Error:     &errMsg,
-			NodeInfo:  NodeInfo{Version: NodeVersion},
+			IsStarted:       false,
+			Error:           &errMsg,
+			NodeInformation: NodeInformation{Version: version.Version},
 		}))
 		return
 	}
@@ -166,23 +169,23 @@ func (c *XrayController) handleStart(ctx *gin.Context) {
 		c.logger.WithError(err).Error("Failed to start xray core")
 		errMsg := "failed to start xray: " + err.Error()
 		ctx.JSON(http.StatusInternalServerError, wrapResponse(StartResponse{
-			IsStarted: false,
-			Error:     &errMsg,
-			NodeInfo:  NodeInfo{Version: NodeVersion},
+			IsStarted:       false,
+			Error:           &errMsg,
+			NodeInformation: NodeInformation{Version: version.Version},
 		}))
 		return
 	}
 
-	version := c.core.GetVersion()
+	xrayVer := c.core.GetVersion()
 	sysInfo := getSystemInfo()
 
-	c.logger.WithField("version", version).Info("Xray core started successfully")
+	c.logger.WithField("version", xrayVer).Info("Xray core started successfully")
 
 	ctx.JSON(http.StatusOK, wrapResponse(StartResponse{
-		IsStarted:  true,
-		Version:    &version,
-		SystemInfo: &sysInfo,
-		NodeInfo:   NodeInfo{Version: NodeVersion},
+		IsStarted:       true,
+		Version:         &xrayVer,
+		SystemInfo:      &sysInfo,
+		NodeInformation: NodeInformation{Version: version.Version},
 	}))
 }
 
@@ -233,17 +236,83 @@ func (c *XrayController) handleHealthcheck(ctx *gin.Context) {
 		IsHealthy:     true,
 		IsXrayRunning: isRunning,
 		XrayVersion:   xrayVersion,
-		NodeVersion:   NodeVersion,
+		NodeVersion:   version.Version,
 	}))
 }
 
 func getSystemInfo() SystemInfo {
 	return SystemInfo{
-		OS:           runtime.GOOS,
-		Arch:         runtime.GOARCH,
-		NumCPU:       runtime.NumCPU(),
-		GoVersion:    runtime.Version(),
-		NumGoroutine: runtime.NumGoroutine(),
+		CpuCores:    runtime.NumCPU(),
+		CpuModel:    getCPUModel(),
+		MemoryTotal: getTotalMemory(),
+	}
+}
+
+func getCPUModel() string {
+	switch runtime.GOOS {
+	case "linux":
+		f, err := os.Open("/proc/cpuinfo")
+		if err != nil {
+			return "unknown"
+		}
+		defer f.Close()
+
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			line := scanner.Text()
+			if strings.HasPrefix(line, "model name") {
+				parts := strings.SplitN(line, ":", 2)
+				if len(parts) == 2 {
+					return strings.TrimSpace(parts[1])
+				}
+			}
+		}
+		return "unknown"
+	case "darwin":
+		out, err := exec.Command("sysctl", "-n", "machdep.cpu.brand_string").Output()
+		if err != nil {
+			return "unknown"
+		}
+		return strings.TrimSpace(string(out))
+	default:
+		return "unknown"
+	}
+}
+
+func getTotalMemory() string {
+	switch runtime.GOOS {
+	case "linux":
+		f, err := os.Open("/proc/meminfo")
+		if err != nil {
+			return "unknown"
+		}
+		defer f.Close()
+
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			line := scanner.Text()
+			if strings.HasPrefix(line, "MemTotal:") {
+				parts := strings.Fields(line)
+				if len(parts) >= 2 {
+					return parts[1] + " kB"
+				}
+			}
+		}
+		return "unknown"
+	case "darwin":
+		out, err := exec.Command("sysctl", "-n", "hw.memsize").Output()
+		if err != nil {
+			return "unknown"
+		}
+		memStr := strings.TrimSpace(string(out))
+		var memBytes uint64
+		if _, err := fmt.Sscanf(memStr, "%d", &memBytes); err != nil {
+			return "unknown"
+		}
+		memMB := memBytes / (1024 * 1024)
+		return fmt.Sprintf("%d MB", memMB)
+	default:
+		return "unknown"
 	}
 }
 

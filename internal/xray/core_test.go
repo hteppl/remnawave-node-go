@@ -27,10 +27,6 @@ func makeMinimalConfig() []byte {
 	return data
 }
 
-func makeInvalidConfig() []byte {
-	return []byte(`{"invalid": true, "inbounds": "not-an-array"}`)
-}
-
 func makeInvalidJSON() []byte {
 	return []byte(`{not valid json`)
 }
@@ -123,7 +119,7 @@ func TestCore_DoubleStart(t *testing.T) {
 
 	err := c.Start(makeMinimalConfig())
 	require.NoError(t, err)
-	defer c.Stop()
+	defer func() { _ = c.Stop() }()
 
 	err = c.Start(makeMinimalConfig())
 	require.NoError(t, err)

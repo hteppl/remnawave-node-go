@@ -229,7 +229,7 @@ func TestUserToMemoryUser(t *testing.T) {
 				t.Errorf("ToMemoryUser() failed: %v", err)
 			}
 			if mUser == nil {
-				t.Error("ToMemoryUser() returned nil")
+				t.Fatal("ToMemoryUser() returned nil")
 			}
 			if mUser.Email != tc.user.Email {
 				t.Errorf("MemoryUser.Email = %q, want %q", mUser.Email, tc.user.Email)

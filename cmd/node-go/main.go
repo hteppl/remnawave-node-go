@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -12,25 +11,11 @@ import (
 	"github.com/remnawave/node-go/internal/api"
 	"github.com/remnawave/node-go/internal/config"
 	"github.com/remnawave/node-go/internal/logger"
+	"github.com/remnawave/node-go/internal/version"
 	"github.com/remnawave/node-go/internal/xray"
 )
 
-var (
-	Version   = "dev"
-	BuildTime = "unknown"
-)
-
 func main() {
-	var showVersion bool
-
-	flag.BoolVar(&showVersion, "version", false, "Show version and exit")
-	flag.Parse()
-
-	if showVersion {
-		fmt.Printf("remnawave-node-go version %s (built %s)\n", Version, BuildTime)
-		os.Exit(0)
-	}
-
 	_ = godotenv.Load()
 
 	cfg, err := config.Load()
@@ -54,7 +39,7 @@ func main() {
 		Format: logger.FormatJSON,
 	})
 
-	log.Info(fmt.Sprintf("Starting remnawave-node-go version %s", Version))
+	log.Info(fmt.Sprintf("Starting remnawave-node-go version %s", version.Version))
 
 	core := xray.NewCore(log)
 	configMgr := xray.NewConfigManager(log)

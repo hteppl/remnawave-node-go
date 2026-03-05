@@ -394,7 +394,7 @@ func TestParseRSAPublicKey_PKIX(t *testing.T) {
 		Bytes: publicKeyBytes,
 	})
 
-	key, err := parseRSAPublicKey(string(publicKeyPEM))
+	key, err := ParseRSAPublicKey(string(publicKeyPEM))
 	if err != nil {
 		t.Errorf("Failed to parse PKIX public key: %v", err)
 	}
@@ -415,7 +415,7 @@ func TestParseRSAPublicKey_PKCS1(t *testing.T) {
 		Bytes: publicKeyBytes,
 	})
 
-	key, err := parseRSAPublicKey(string(publicKeyPEM))
+	key, err := ParseRSAPublicKey(string(publicKeyPEM))
 	if err != nil {
 		t.Errorf("Failed to parse PKCS1 public key: %v", err)
 	}
@@ -425,7 +425,7 @@ func TestParseRSAPublicKey_PKCS1(t *testing.T) {
 }
 
 func TestParseRSAPublicKey_InvalidPEM(t *testing.T) {
-	_, err := parseRSAPublicKey("not a pem")
+	_, err := ParseRSAPublicKey("not a pem")
 	if err == nil {
 		t.Error("Expected error for invalid PEM")
 	}
@@ -437,7 +437,7 @@ func TestParseRSAPublicKey_InvalidKey(t *testing.T) {
 		Bytes: []byte("invalid key data"),
 	})
 
-	_, err := parseRSAPublicKey(string(invalidPEM))
+	_, err := ParseRSAPublicKey(string(invalidPEM))
 	if err == nil {
 		t.Error("Expected error for invalid key data")
 	}
