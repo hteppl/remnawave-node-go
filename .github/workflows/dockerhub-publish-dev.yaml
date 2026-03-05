@@ -24,6 +24,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Set short SHA
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -32,7 +35,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: hteppl/remnawave-node-go:dev
           build-args: |
-            VERSION=0.0.0-dev+${{ github.sha }}
+            VERSION=0.0.0-dev+${{ env.SHORT_SHA }}
             BUILD_TIME=${{ github.event.head_commit.timestamp }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
