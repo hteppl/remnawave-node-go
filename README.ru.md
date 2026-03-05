@@ -1,5 +1,8 @@
 # remnawave-node-go
 
+[![Go Version](https://img.shields.io/github/go-mod/go-version/hteppl/remnawave-node-go)](https://go.dev/)
+[![Docker Hub](https://img.shields.io/docker/v/hteppl/remnawave-node-go?label=Docker%20Hub)](https://hub.docker.com/r/hteppl/remnawave-node-go)
+
 [English](README.md) | [Русский](README.ru.md)
 
 Неофициальная community Go-реализация [Remnawave node](https://github.com/remnawave/node) для [xray-core](https://github.com/XTLS/Xray-core). Управляет жизненным циклом xray-core, пользователями, статистикой трафика и блокировкой IP через REST API.
