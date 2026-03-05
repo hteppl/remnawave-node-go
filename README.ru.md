@@ -6,7 +6,7 @@
 [![Docker Hub](https://img.shields.io/badge/Docker%20Hub-hteppl%2Fremnawave--node--go-blue)](https://hub.docker.com/r/hteppl/remnawave-node-go)
 [![Docker Pulls](https://img.shields.io/docker/pulls/hteppl/remnawave-node-go)](https://hub.docker.com/r/hteppl/remnawave-node-go)
 [![Docker Image Size](https://img.shields.io/docker/image-size/hteppl/remnawave-node-go/latest)](https://hub.docker.com/r/hteppl/remnawave-node-go)
-[![License](https://img.shields.io/github/license/hteppl/remnawave-node-go)](LICENSE)
+[![License](https://img.shields.io/github/license/hteppl/remnawave-node-go)](https://github.com/hteppl/remnawave-node-go/blob/master/LICENSE)
 
 [English](README.md) | [Русский](README.ru.md)
 
