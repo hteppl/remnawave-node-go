@@ -5,9 +5,12 @@
 
 [English](README.md) | [Русский](README.ru.md)
 
-An unofficial community Go implementation of the [Remnawave node](https://github.com/remnawave/node) for [xray-core](https://github.com/XTLS/Xray-core). Manages xray-core lifecycle, users, traffic statistics, and IP blocking through a REST API.
+An unofficial community Go implementation of the [Remnawave node](https://github.com/remnawave/node)
+for [xray-core](https://github.com/XTLS/Xray-core). Manages xray-core lifecycle, users, traffic statistics, and IP
+blocking through a REST API.
 
-> **⚠️ Warning:** This is an unofficial community realization of remnawave-node. It is not affiliated with the official Remnawave team. Use at your own risk.
+> **⚠️ Warning:** This is an unofficial community realization of remnawave-node. It is not affiliated with the official
+> Remnawave team. Use at your own risk.
 
 ## Comparison with the official node
 
@@ -21,7 +24,8 @@ An unofficial community Go implementation of the [Remnawave node](https://github
 | **Architecture** | Microservice (NestJS + supervisord)                 | Single static binary    |
 | **Status**       | Official                                            | Unofficial (community)  |
 
-> *\* xray-core is compiled directly into the binary as a Go library. Only geodata files (`geoip.dat`, `geosite.dat`) are downloaded on first start and cached in the Docker volume for subsequent starts.*
+> *\* xray-core is compiled directly into the binary as a Go library. Only geodata files (`geoip.dat`, `geosite.dat`)
+are downloaded on first start and cached in the Docker volume for subsequent starts.*
 
 ## Configuration
 
