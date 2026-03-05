@@ -110,14 +110,14 @@ func TestGenerateAPIConfig_AddsAPIInbound(t *testing.T) {
 	for _, ib := range inbounds {
 		ibMap, ok := ib.(map[string]interface{})
 		if ok {
-			if tag, ok := ibMap["tag"].(string); ok && tag == "api" {
+			if tag, ok := ibMap["tag"].(string); ok && tag == "REMNAWAVE_API_INBOUND" {
 				hasAPIInbound = true
 				assert.Equal(t, "dokodemo-door", ibMap["protocol"])
 				break
 			}
 		}
 	}
-	assert.True(t, hasAPIInbound, "should have api inbound")
+	assert.True(t, hasAPIInbound, "should have REMNAWAVE_API_INBOUND inbound")
 }
 
 func TestGenerateAPIConfig_AddsAPIRoutingRule(t *testing.T) {
@@ -148,13 +148,13 @@ func TestGenerateAPIConfig_AddsAPIRoutingRule(t *testing.T) {
 	for _, rule := range rules {
 		ruleMap, ok := rule.(map[string]interface{})
 		if ok {
-			if outTag, ok := ruleMap["outboundTag"].(string); ok && outTag == "api" {
+			if outTag, ok := ruleMap["outboundTag"].(string); ok && outTag == "REMNAWAVE_API" {
 				hasAPIRule = true
 				break
 			}
 		}
 	}
-	assert.True(t, hasAPIRule, "should have api routing rule")
+	assert.True(t, hasAPIRule, "should have REMNAWAVE_API routing rule")
 }
 
 func TestGenerateAPIConfig_AddsStats(t *testing.T) {
@@ -251,7 +251,7 @@ func TestGenerateAPIConfig_SkipsDuplicateAPIInbound(t *testing.T) {
 		"log": map[string]interface{}{"loglevel": "warning"},
 		"inbounds": []interface{}{
 			map[string]interface{}{
-				"tag": "api", "port": 99999, "protocol": "dokodemo-door",
+				"tag": "REMNAWAVE_API_INBOUND", "port": 99999, "protocol": "dokodemo-door",
 				"settings": map[string]interface{}{"address": "127.0.0.1"},
 			},
 			map[string]interface{}{
@@ -276,12 +276,12 @@ func TestGenerateAPIConfig_SkipsDuplicateAPIInbound(t *testing.T) {
 	for _, ib := range inbounds {
 		ibMap, ok := ib.(map[string]interface{})
 		if ok {
-			if tag, ok := ibMap["tag"].(string); ok && tag == "api" {
+			if tag, ok := ibMap["tag"].(string); ok && tag == "REMNAWAVE_API_INBOUND" {
 				apiCount++
 			}
 		}
 	}
-	assert.Equal(t, 1, apiCount, "should not duplicate api inbound")
+	assert.Equal(t, 1, apiCount, "should not duplicate REMNAWAVE_API_INBOUND inbound")
 }
 
 func TestGenerateAPIConfig_AddsRoutingServiceToExistingAPI(t *testing.T) {

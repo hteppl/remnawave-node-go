@@ -7,7 +7,7 @@ func generateAPIConfig(config map[string]interface{}) map[string]interface{} {
 	}
 
 	apiInbound := map[string]interface{}{
-		"tag":      "api",
+		"tag":      "REMNAWAVE_API_INBOUND",
 		"port":     APIPort,
 		"listen":   "127.0.0.1",
 		"protocol": "dokodemo-door",
@@ -24,7 +24,7 @@ func generateAPIConfig(config map[string]interface{}) map[string]interface{} {
 	hasAPIInbound := false
 	for _, inbound := range inbounds {
 		if ib, ok := inbound.(map[string]interface{}); ok {
-			if tag, ok := ib["tag"].(string); ok && tag == "api" {
+			if tag, ok := ib["tag"].(string); ok && tag == "REMNAWAVE_API_INBOUND" {
 				hasAPIInbound = true
 				break
 			}
@@ -49,7 +49,7 @@ func generateAPIConfig(config map[string]interface{}) map[string]interface{} {
 	hasAPIRule := false
 	for _, rule := range rules {
 		if r, ok := rule.(map[string]interface{}); ok {
-			if outboundTag, ok := r["outboundTag"].(string); ok && outboundTag == "api" {
+			if outboundTag, ok := r["outboundTag"].(string); ok && outboundTag == "REMNAWAVE_API" {
 				hasAPIRule = true
 				break
 			}
@@ -59,8 +59,8 @@ func generateAPIConfig(config map[string]interface{}) map[string]interface{} {
 	if !hasAPIRule {
 		apiRule := map[string]interface{}{
 			"type":        "field",
-			"outboundTag": "api",
-			"inboundTag":  []interface{}{"api"},
+			"outboundTag": "REMNAWAVE_API",
+			"inboundTag":  []interface{}{"REMNAWAVE_API_INBOUND"},
 		}
 		rules = append([]interface{}{apiRule}, rules...)
 		routing["rules"] = rules
@@ -69,8 +69,8 @@ func generateAPIConfig(config map[string]interface{}) map[string]interface{} {
 
 	if _, ok := result["api"]; !ok {
 		result["api"] = map[string]interface{}{
-			"services": []interface{}{"HandlerService", "LoggerService", "StatsService", "RoutingService"},
-			"tag":      "api",
+			"services": []interface{}{"HandlerService", "StatsService", "RoutingService"},
+			"tag":      "REMNAWAVE_API",
 		}
 	} else {
 		api, _ := result["api"].(map[string]interface{})

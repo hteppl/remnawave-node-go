@@ -91,6 +91,10 @@ func (c *HandlerController) handleAddUser(ctx *gin.Context) {
 	username := req.Data[0].Username
 	bgCtx := context.Background()
 
+	for _, inboundData := range req.Data {
+		c.configManager.AddXtlsConfigInbound(inboundData.Tag)
+	}
+
 	allTags := c.configManager.GetXtlsConfigInbounds()
 	if err := userManager.RemoveUserFromAllInbounds(bgCtx, allTags, username); err != nil {
 		c.logger.WithError(err).WithField("username", username).
@@ -198,6 +202,10 @@ func (c *HandlerController) handleAddUsers(ctx *gin.Context) {
 
 	bgCtx := context.Background()
 
+	for _, tag := range req.AffectedInboundTags {
+		c.configManager.AddXtlsConfigInbound(tag)
+	}
+
 	allTags := req.AffectedInboundTags
 	if len(allTags) == 0 {
 		allTags = c.configManager.GetXtlsConfigInbounds()
@@ -256,8 +264,8 @@ func (c *HandlerController) handleAddUsers(ctx *gin.Context) {
 				return
 			}
 
-			if userEntry.UserData.HashUUID != "" {
-				c.configManager.AddUserToInbound(inboundData.Tag, userEntry.UserData.HashUUID)
+			if userEntry.UserData.VlessUUID != "" {
+				c.configManager.AddUserToInbound(inboundData.Tag, userEntry.UserData.VlessUUID)
 			}
 		}
 	}
@@ -296,6 +304,11 @@ func (c *HandlerController) handleRemoveUser(ctx *gin.Context) {
 	bgCtx := context.Background()
 
 	allTags := c.configManager.GetXtlsConfigInbounds()
+	if len(allTags) == 0 {
+		ctx.JSON(http.StatusOK, wrapResponse(AddUserResponseData{Success: true}))
+		return
+	}
+
 	if err := userManager.RemoveUserFromAllInbounds(bgCtx, allTags, req.Username); err != nil {
 		c.logger.WithError(err).WithField("username", req.Username).
 			Warn(logErrorRemovingUserFromInbounds)
@@ -348,6 +361,10 @@ func (c *HandlerController) handleRemoveUsers(ctx *gin.Context) {
 
 	bgCtx := context.Background()
 	allTags := c.configManager.GetXtlsConfigInbounds()
+	if len(allTags) == 0 {
+		ctx.JSON(http.StatusOK, wrapResponse(AddUserResponseData{Success: true}))
+		return
+	}
 
 	for _, userEntry := range req.Users {
 		if err := userManager.RemoveUserFromAllInbounds(bgCtx, allTags, userEntry.UserID); err != nil {

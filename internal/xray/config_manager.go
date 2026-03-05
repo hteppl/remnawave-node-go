@@ -241,6 +241,12 @@ func (m *ConfigManager) RemoveUserFromInbound(inboundTag, userID string) {
 	}
 }
 
+func (m *ConfigManager) AddXtlsConfigInbound(inboundTag string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.xtlsConfigInbounds[inboundTag] = struct{}{}
+}
+
 func (m *ConfigManager) GetXtlsConfigInbounds() []string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
