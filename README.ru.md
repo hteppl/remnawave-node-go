@@ -107,6 +107,18 @@ docker logs -t remnawave-node-go
 
 Для более подробных логов установите `LOG_LEVEL=debug` в файле `.env` и перезапустите контейнер.
 
+### Внутренний API
+
+Текущую конфигурацию xray можно получить через внутренний REST API:
+
+```bash
+# Вывести конфигурацию в stdout
+curl -s http://127.0.0.1:61001/internal/get-config | jq
+
+# Сохранить конфигурацию в файл
+curl -s http://127.0.0.1:61001/internal/get-config | jq > config.json
+```
+
 ### Управление
 
 ```bash
