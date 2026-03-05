@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"strconv"
@@ -32,6 +33,10 @@ func Load() (*Config, error) {
 		LogLevel:         DefaultLogLevel,
 	}
 
+	if configPath := os.Getenv("CONFIG_PATH"); configPath != "" {
+		loadFromFile(cfg, configPath)
+	}
+
 	loadFromEnv(cfg)
 
 	if cfg.SecretKey == "" {
@@ -45,6 +50,32 @@ func Load() (*Config, error) {
 	cfg.Payload = payload
 
 	return cfg, nil
+}
+
+func loadFromFile(cfg *Config, path string) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return
+	}
+
+	var file struct {
+		NodePort         *int    `json:"nodePort"`
+		InternalRestPort *int    `json:"internalRestPort"`
+		LogLevel         *string `json:"logLevel"`
+	}
+	if err := json.Unmarshal(data, &file); err != nil {
+		return
+	}
+
+	if file.NodePort != nil {
+		cfg.NodePort = *file.NodePort
+	}
+	if file.InternalRestPort != nil {
+		cfg.InternalRestPort = *file.InternalRestPort
+	}
+	if file.LogLevel != nil {
+		cfg.LogLevel = *file.LogLevel
+	}
 }
 
 func loadFromEnv(cfg *Config) {
