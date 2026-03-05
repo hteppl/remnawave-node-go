@@ -1,0 +1,52 @@
+# Git
+.git
+.gitignore
+
+# GitHub
+.github
+
+# IDE
+.idea
+.vscode
+.claude
+CLAUDE.md
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+README.ru.md
+LICENSE
+
+# Docker
+docker-compose*.yml
+
+# Environment and secrets
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.csr
+test-secrets
+
+# Go build artifacts
+dist
+coverage.out
+coverage.html
+
+# Test files
+tests
+**/*_test.go
+
+# Misc
+tmp
+*.tmp
+*.log
+Makefile
+scripts
+pkg
