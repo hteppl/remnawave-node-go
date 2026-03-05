@@ -3,7 +3,7 @@ package controller
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"net"
+	"fmt"
 	"net/http"
 	"sync"
 
@@ -13,8 +13,18 @@ import (
 	"github.com/hteppl/remnawave-node-go/internal/xray"
 )
 
+var (
+	logFailedToParseBlockIPRequest   = "Failed to parse block-ip request"
+	logFailedToParseUnblockIPRequest = "Failed to parse unblock-ip request"
+	logFailedToAddRoutingRule        = "Failed to add routing rule"
+	logFailedToRemoveRoutingRule     = "Failed to remove routing rule"
+	logIPBlocked                     = "IP blocked"
+	logIPUnblocked                   = "IP unblocked"
+)
+
 type BlockIPRequest struct {
-	IP string `json:"ip" binding:"required"`
+	IP       string `json:"ip" binding:"required"`
+	Username string `json:"username" binding:"required"`
 }
 
 type BlockIPResponse struct {
@@ -43,25 +53,18 @@ func (c *VisionController) RegisterRoutes(group *gin.RouterGroup) {
 }
 
 func (c *VisionController) getIPHash(ip string) string {
-	hash := md5.Sum([]byte(ip))
+	// Match object-hash npm package format: "string:<length>:<value>"
+	data := fmt.Sprintf("string:%d:%s", len(ip), ip)
+	hash := md5.Sum([]byte(data))
 	return hex.EncodeToString(hash[:])
 }
 
 func (c *VisionController) handleBlockIP(ctx *gin.Context) {
 	var req BlockIPRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		c.logger.WithError(err).Error("Failed to parse block-ip request")
-		errMsg := "invalid request body: " + err.Error()
-		ctx.JSON(http.StatusBadRequest, wrapResponse(BlockIPResponse{
-			Success: false,
-			Error:   &errMsg,
-		}))
-		return
-	}
-
-	if net.ParseIP(req.IP) == nil {
-		errMsg := "invalid IP address format"
-		ctx.JSON(http.StatusBadRequest, wrapResponse(BlockIPResponse{
+		c.logger.WithError(err).Error(logFailedToParseBlockIPRequest)
+		errMsg := err.Error()
+		ctx.JSON(http.StatusOK, wrapResponse(BlockIPResponse{
 			Success: false,
 			Error:   &errMsg,
 		}))
@@ -70,35 +73,21 @@ func (c *VisionController) handleBlockIP(ctx *gin.Context) {
 
 	ruleTag := c.getIPHash(req.IP)
 
-	c.mu.Lock()
-	_, alreadyBlocked := c.blockedIPs[ruleTag]
-	if alreadyBlocked {
-		c.mu.Unlock()
-		ctx.JSON(http.StatusOK, wrapResponse(BlockIPResponse{
-			Success: true,
-			Error:   nil,
-		}))
-		return
-	}
-	c.blockedIPs[ruleTag] = req.IP
-	c.mu.Unlock()
-
 	if err := c.core.AddRoutingRule(ruleTag, req.IP, "BLOCK"); err != nil {
-		c.logger.WithError(err).WithField("ip", req.IP).Error("Failed to add routing rule")
-
-		c.mu.Lock()
-		delete(c.blockedIPs, ruleTag)
-		c.mu.Unlock()
-
-		errMsg := "failed to block IP: " + err.Error()
-		ctx.JSON(http.StatusInternalServerError, wrapResponse(BlockIPResponse{
+		c.logger.WithError(err).WithField("ip", req.IP).Error(logFailedToAddRoutingRule)
+		errMsg := err.Error()
+		ctx.JSON(http.StatusOK, wrapResponse(BlockIPResponse{
 			Success: false,
 			Error:   &errMsg,
 		}))
 		return
 	}
 
-	c.logger.WithField("ip", req.IP).WithField("ruleTag", ruleTag).Info("IP blocked")
+	c.mu.Lock()
+	c.blockedIPs[ruleTag] = req.IP
+	c.mu.Unlock()
+
+	c.logger.WithField("ip", req.IP).WithField("ruleTag", ruleTag).Info(logIPBlocked)
 
 	ctx.JSON(http.StatusOK, wrapResponse(BlockIPResponse{
 		Success: true,
@@ -109,18 +98,9 @@ func (c *VisionController) handleBlockIP(ctx *gin.Context) {
 func (c *VisionController) handleUnblockIP(ctx *gin.Context) {
 	var req BlockIPRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		c.logger.WithError(err).Error("Failed to parse unblock-ip request")
-		errMsg := "invalid request body: " + err.Error()
-		ctx.JSON(http.StatusBadRequest, wrapResponse(BlockIPResponse{
-			Success: false,
-			Error:   &errMsg,
-		}))
-		return
-	}
-
-	if net.ParseIP(req.IP) == nil {
-		errMsg := "invalid IP address format"
-		ctx.JSON(http.StatusBadRequest, wrapResponse(BlockIPResponse{
+		c.logger.WithError(err).Error(logFailedToParseUnblockIPRequest)
+		errMsg := err.Error()
+		ctx.JSON(http.StatusOK, wrapResponse(BlockIPResponse{
 			Success: false,
 			Error:   &errMsg,
 		}))
@@ -129,18 +109,21 @@ func (c *VisionController) handleUnblockIP(ctx *gin.Context) {
 
 	ruleTag := c.getIPHash(req.IP)
 
+	if err := c.core.RemoveRoutingRule(ruleTag); err != nil {
+		c.logger.WithError(err).WithField("ip", req.IP).Error(logFailedToRemoveRoutingRule)
+		errMsg := err.Error()
+		ctx.JSON(http.StatusOK, wrapResponse(BlockIPResponse{
+			Success: false,
+			Error:   &errMsg,
+		}))
+		return
+	}
+
 	c.mu.Lock()
-	_, wasBlocked := c.blockedIPs[ruleTag]
 	delete(c.blockedIPs, ruleTag)
 	c.mu.Unlock()
 
-	if wasBlocked {
-		if err := c.core.RemoveRoutingRule(ruleTag); err != nil {
-			c.logger.WithError(err).WithField("ip", req.IP).Warn("Failed to remove routing rule")
-		}
-	}
-
-	c.logger.WithField("ip", req.IP).WithField("ruleTag", ruleTag).Info("IP unblocked")
+	c.logger.WithField("ip", req.IP).WithField("ruleTag", ruleTag).Info(logIPUnblocked)
 
 	ctx.JSON(http.StatusOK, wrapResponse(BlockIPResponse{
 		Success: true,
