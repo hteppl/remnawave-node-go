@@ -21,6 +21,15 @@ blocking through a REST API.
 > **⚠️ Warning:** This is an unofficial community realization of remnawave-node. It is not affiliated with the official
 > Remnawave team. Use at your own risk.
 
+## Compatibility
+
+| remnawave-node-go     | Remnawave   |
+|-----------------------|-------------|
+| v1.2.1                | Below 2.7.0 |
+| v1.3.0+ (in progress) | 2.7.0+      |
+
+> **Note:** The release compatible with Remnawave 2.7.0+ is not yet available. If you are using Remnawave 2.7.0 or higher, please wait for the upcoming release.
+
 ## Comparison with the official node
 
 |                  | [remnawave/node](https://github.com/remnawave/node) | remnawave-node-go       |
